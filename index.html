@@ -2,835 +2,523 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DHL - Registro de Huellas de Mercancía</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>DHL - Huellas de Mercancía</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --dhl-yellow: #FFCC00;
-    --dhl-red: #D40511;
-    --dhl-dark: #1A1A1A;
-    --dhl-gray: #F5F5F5;
-    --dhl-border: #E0E0E0;
-    --dhl-text: #222222;
-    --dhl-muted: #666666;
-    --success: #2E7D32;
-    --error: #C62828;
-  }
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #F0F0F0;
-    color: var(--dhl-text);
-    min-height: 100vh;
-  }
-  header {
-    background: var(--dhl-yellow);
-    padding: 0;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .header-inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 12px 24px;
-    max-width: 1100px;
-    margin: 0 auto;
-  }
-  .header-inner img {
-    height: 44px;
-    object-fit: contain;
-  }
-  .header-title {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--dhl-dark);
-    text-align: right;
-    line-height: 1.3;
-  }
-  .header-title span {
-    display: block;
-    font-size: 12px;
-    font-weight: 400;
-    color: #555;
-  }
-  nav {
-    background: var(--dhl-red);
-    display: flex;
-    gap: 0;
-  }
-  nav button {
-    background: none;
-    border: none;
-    color: white;
-    padding: 12px 28px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    letter-spacing: 0.3px;
-    border-bottom: 3px solid transparent;
-    transition: all 0.2s;
-  }
-  nav button.active, nav button:hover {
-    background: rgba(0,0,0,0.2);
-    border-bottom: 3px solid var(--dhl-yellow);
-  }
-  .main {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 24px 16px;
-  }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-  .card {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    padding: 24px;
-    margin-bottom: 20px;
-  }
-  .card-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--dhl-red);
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--dhl-yellow);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .grid-2 {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .grid-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 16px;
-  }
-  @media (max-width: 700px) {
-    .grid-2, .grid-3 { grid-template-columns: 1fr; }
-    nav button { padding: 10px 14px; font-size: 12px; }
-    .header-inner img { height: 32px; }
-  }
-  .form-group { display: flex; flex-direction: column; gap: 6px; }
-  label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--dhl-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-  label .required { color: var(--dhl-red); }
-  input[type=text], input[type=number] {
-    border: 1.5px solid var(--dhl-border);
-    border-radius: 6px;
-    padding: 10px 14px;
-    font-size: 15px;
-    color: var(--dhl-text);
-    transition: border-color 0.2s;
-    outline: none;
-    background: white;
-    width: 100%;
-  }
-  input[type=text]:focus, input[type=number]:focus {
-    border-color: var(--dhl-red);
-    box-shadow: 0 0 0 3px rgba(212,5,17,0.1);
-  }
-  input.error { border-color: var(--error); }
-  .input-wrap {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  .input-unit {
-    position: absolute;
-    right: 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--dhl-muted);
-    pointer-events: none;
-  }
-  .input-wrap input { padding-right: 44px; }
-  .error-msg {
-    font-size: 12px;
-    color: var(--error);
-    display: none;
-    margin-top: 2px;
-  }
-  .error-msg.show { display: block; }
-  .photo-box {
-    border: 2px dashed var(--dhl-border);
-    border-radius: 8px;
-    padding: 16px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.2s, background 0.2s;
-    position: relative;
-    background: #FAFAFA;
-  }
-  .photo-box:hover { border-color: var(--dhl-red); background: #FFF5F5; }
-  .photo-box input[type=file] {
-    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-  }
-  .photo-box .icon { font-size: 28px; margin-bottom: 4px; }
-  .photo-box p { font-size: 12px; color: var(--dhl-muted); }
-  .photo-preview {
-    width: 100%; height: 120px; object-fit: cover; border-radius: 6px; margin-top: 8px; display: none;
-  }
-  .photo-name { font-size: 12px; color: var(--success); margin-top: 4px; display: none; }
-  .measure-section {
-    background: #FFFBF0;
-    border: 1px solid #FFE066;
-    border-radius: 8px;
-    padding: 16px;
-    margin-top: 8px;
-  }
-  .measure-section label { color: #7A5900; }
-  .btn {
-    border: none;
-    border-radius: 6px;
-    padding: 12px 28px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 0.3px;
-  }
-  .btn-primary {
-    background: var(--dhl-red);
-    color: white;
-  }
-  .btn-primary:hover { background: #B00000; transform: translateY(-1px); }
-  .btn-secondary {
-    background: var(--dhl-yellow);
-    color: var(--dhl-dark);
-  }
-  .btn-secondary:hover { background: #E6B800; }
-  .btn-sm {
-    padding: 7px 16px;
-    font-size: 13px;
-    border-radius: 5px;
-  }
-  .btn-danger {
-    background: #ffebee;
-    color: var(--error);
-  }
-  .btn-danger:hover { background: #ffcdd2; }
-  .actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 24px;
-    flex-wrap: wrap;
-  }
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--success);
-    color: white;
-    padding: 14px 24px;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
-    transform: translateY(100px);
-    opacity: 0;
-    transition: all 0.35s;
-    z-index: 999;
-  }
-  .toast.show { transform: translateY(0); opacity: 1; }
-  .toast.error-toast { background: var(--error); }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
-  }
-  th {
-    background: var(--dhl-yellow);
-    color: var(--dhl-dark);
-    padding: 10px 12px;
-    text-align: left;
-    font-weight: 700;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-  }
-  td {
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--dhl-border);
-    vertical-align: middle;
-  }
-  tr:hover td { background: #FFFBF0; }
-  .badge {
-    display: inline-block;
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    background: #E8F5E9;
-    color: #2E7D32;
-  }
-  .table-wrap { overflow-x: auto; }
-  .search-bar {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  .search-bar input {
-    flex: 1;
-    min-width: 200px;
-    padding: 9px 14px;
-    border: 1.5px solid var(--dhl-border);
-    border-radius: 6px;
-    font-size: 14px;
-    outline: none;
-  }
-  .search-bar input:focus { border-color: var(--dhl-red); }
-  .stats-bar {
-    display: flex;
-    gap: 16px;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-  }
-  .stat-card {
-    background: white;
-    border-radius: 8px;
-    padding: 14px 20px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-    flex: 1;
-    min-width: 120px;
-    border-top: 3px solid var(--dhl-yellow);
-  }
-  .stat-card .num {
-    font-size: 28px;
-    font-weight: 800;
-    color: var(--dhl-red);
-    line-height: 1;
-  }
-  .stat-card .lbl {
-    font-size: 12px;
-    color: var(--dhl-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-top: 4px;
-  }
-  .empty-state {
-    text-align: center;
-    padding: 40px;
-    color: var(--dhl-muted);
-  }
-  .empty-state .big-icon { font-size: 48px; margin-bottom: 12px; }
-  .thumb-img {
-    width: 36px; height: 36px; object-fit: cover; border-radius: 4px; cursor: pointer;
-    border: 1px solid #ddd;
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#F0F0F0;color:#222;min-height:100vh}
+header{background:#FFCC00;position:sticky;top:0;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,0.15)}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;max-width:1000px;margin:0 auto}
+.hdr img{height:40px;object-fit:contain}
+.hdr-title{font-size:13px;font-weight:700;color:#1A1A1A;text-align:right;line-height:1.3}
+.hdr-title span{display:block;font-size:11px;font-weight:400;color:#555}
+nav{background:#D40511}
+nav{display:flex}
+nav button{flex:1;background:none;border:none;border-bottom:3px solid transparent;color:white;padding:11px 8px;font-size:13px;font-weight:700;cursor:pointer}
+nav button.active,nav button:hover{background:rgba(0,0,0,0.2);border-bottom:3px solid #FFCC00}
+.main{max-width:1000px;margin:0 auto;padding:16px}
+.tab{display:none}.tab.active{display:block}
+.alert-box{background:#D40511;border-radius:8px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:12px}
+.alert-box .ico{font-size:28px;flex-shrink:0}
+.alert-box .txt{color:white}
+.alert-box .txt strong{color:#FFCC00;font-size:16px;display:block;margin-bottom:3px}
+.alert-box .txt span{font-size:13px;opacity:0.92}
+.card{background:white;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1);padding:16px;margin-bottom:14px}
+.card-title{font-size:15px;font-weight:700;color:#D40511;padding-bottom:10px;margin-bottom:14px;border-bottom:2px solid #FFCC00;display:flex;align-items:center;gap:6px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.g2{grid-template-columns:1fr}}
+.fg{display:flex;flex-direction:column;gap:5px}
+label.lbl{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.4px}
+.req{color:#D40511}
+input[type=text],input[type=number]{width:100%;border:1.5px solid #ddd;border-radius:6px;padding:10px 44px 10px 12px;font-size:15px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
+input[type=text]:focus,input[type=number]:focus{border-color:#D40511;box-shadow:0 0 0 3px rgba(212,5,17,0.1)}
+input.err{border-color:#C62828}
+.iw{position:relative}
+.iw input{padding-right:44px}
+.unit{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;color:#888;pointer-events:none}
+.emsg{font-size:11px;color:#C62828;display:none;margin-top:2px}
+.emsg.show{display:block}
+.msec{background:#FFFBF0;border:1px solid #FFE066;border-radius:8px;padding:14px;margin-bottom:12px}
+.msec .card-title{font-size:13px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid #FFE066}
+.photo-btns{display:flex;gap:8px;margin-top:4px}
+.photo-btns label{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:10px 6px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.btn-cam{background:#D40511;color:white}
+.btn-gal{background:#FFCC00;color:#1A1A1A}
+.photo-btns input[type=file]{display:none}
+.photo-err{border:2px solid #C62828!important;border-radius:8px;padding:4px}
+.photo-emsg{font-size:11px;color:#C62828;display:none;margin-top:3px}
+.photo-emsg.show{display:block}
+.prev-wrap{margin-top:8px;display:none}
+.prev-wrap img{width:100%;max-height:140px;object-fit:cover;border-radius:6px;border:1px solid #ddd;display:block}
+.prev-wrap p{font-size:11px;color:#2E7D32;margin-top:4px;font-weight:600}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.btn{border:none;border-radius:6px;padding:13px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(0.97)}
+.btn-red{background:#D40511;color:white}
+.btn-red:disabled{background:#aaa;cursor:not-allowed;transform:none}
+.btn-yel{background:#FFCC00;color:#1A1A1A}
+.btn-del{background:#ffebee;color:#C62828}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(120px);background:#2E7D32;color:white;padding:13px 22px;border-radius:8px;font-weight:700;font-size:14px;box-shadow:0 4px 16px rgba(0,0,0,0.25);transition:transform 0.3s;z-index:9999;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.red{background:#C62828}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.stat{background:white;border-radius:8px;padding:12px 16px;flex:1;min-width:100px;border-top:3px solid #FFCC00;box-shadow:0 1px 4px rgba(0,0,0,0.08)}
+.stat .n{font-size:26px;font-weight:800;color:#D40511;line-height:1}
+.stat .l{font-size:11px;color:#666;font-weight:700;text-transform:uppercase;margin-top:3px}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:500px}
+th{background:#FFCC00;color:#1A1A1A;padding:9px 10px;text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;white-space:nowrap}
+td{padding:9px 10px;border-bottom:1px solid #eee;vertical-align:middle}
+tr:hover td{background:#FFFBF0}
+.srch{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.srch input{flex:1;min-width:180px;padding:9px 12px;border:1.5px solid #ddd;border-radius:6px;font-size:14px;outline:none}
+.srch input:focus{border-color:#D40511}
+.empty{text-align:center;padding:32px;color:#999}
+.empty .ei{font-size:40px;margin-bottom:8px}
+.thumb{width:34px;height:34px;object-fit:cover;border-radius:4px;border:1px solid #ddd;cursor:pointer}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9998;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-bg img{max-width:92vw;max-height:88vh;border-radius:8px}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="header-inner">
-    <img src="data:image/png;base64,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" alt="DHL Logo">
-    <div class="header-title">
-      Registro de Huellas de Mercancía
-      <span>Control de Inventario &amp; Dimensiones</span>
-    </div>
+  <div class="hdr">
+    <img src="data:image/png;base64,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" alt="DHL">
+    <div class="hdr-title">Registro de Huellas de Mercancía<span>Control de Inventario &amp; Dimensiones</span></div>
   </div>
   <nav>
-    <button class="active" onclick="showTab('form')">&#43; Nuevo Registro</button>
-    <button onclick="showTab('historico')">&#128203; Histórico</button>
+    <button id="tab-btn-form" class="active" onclick="showTab('form',this)">＋ Nuevo Registro</button>
+    <button id="tab-btn-hist" onclick="showTab('hist',this)">📋 Histórico</button>
   </nav>
 </header>
 
 <div class="main">
 
-  <!-- FORM TAB -->
-  <div id="tab-form" class="tab-content active">
+<!-- FORM -->
+<div id="tab-form" class="tab active">
 
-    <div style="background:var(--dhl-red); border-radius:8px; padding:18px 24px; margin-bottom:20px; display:flex; align-items:center; gap:16px; box-shadow:0 3px 10px rgba(212,5,17,0.35);">
-      <span style="font-size:36px; flex-shrink:0;">⚠️</span>
-      <div>
-        <div style="font-size:18px; font-weight:800; color:#FFCC00; letter-spacing:0.3px; margin-bottom:4px;">
-          ¡ATENCIÓN! Solo se aceptan medidas en centímetros (cm) y peso en kilogramos (kg)
-        </div>
-        <div style="font-size:14px; color:rgba(255,255,255,0.92); font-weight:500;">
-          Todos los campos marcados con <span style="color:#FFCC00; font-weight:900;">*</span> son obligatorios — los valores deben ser mayores a cero.
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">&#128230; Información del Material</div>
-      <div class="grid-2">
-        <div class="form-group">
-          <label>Código de Material <span class="required">*</span></label>
-          <input type="text" id="cod_material" placeholder="Ej: MAT-001234" maxlength="50">
-          <div class="error-msg" id="err-cod">Campo obligatorio</div>
-        </div>
-        <div class="form-group">
-          <label>Código EAN <span class="required">*</span></label>
-          <input type="text" id="cod_ean" placeholder="Ej: 7702011234567" maxlength="50">
-          <div class="error-msg" id="err-ean">Campo obligatorio</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">&#128207; Dimensiones de la Mercancía</div>
-
-      <!-- PROFUNDIDAD -->
-      <div class="measure-section" style="margin-bottom:14px;">
-        <div class="card-title" style="font-size:14px; margin-bottom:14px; border-bottom:1px solid #FFE066;">&#8597; Profundidad</div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Valor <span class="required">*</span></label>
-            <div class="input-wrap">
-              <input type="number" id="profundidad" placeholder="0.00" min="0.01" step="0.01">
-              <span class="input-unit">cm</span>
-            </div>
-            <div class="error-msg" id="err-prof">Ingrese un valor mayor a 0</div>
-          </div>
-          <div class="form-group">
-            <label>Foto de evidencia</label>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div style="display:flex;gap:8px;">
-                <label for="cam_photo_prof" style="flex:1;cursor:pointer;background:#D40511;color:white;border-radius:6px;padding:9px 8px;text-align:center;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
-                  &#128247; Tomar foto
-                  <input type="file" id="cam_photo_prof" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'prev_prof','name_prof')">
-                </label>
-                <label for="photo_prof" style="flex:1;cursor:pointer;background:#FFCC00;color:#1A1A1A;border-radius:6px;padding:9px 8px;text-align:center;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
-                  &#128190; Galería
-                  <input type="file" id="photo_prof" accept="image/*" style="display:none" onchange="handlePhoto(this,'prev_prof','name_prof')">
-                </label>
-              </div>
-              <img class="photo-preview" id="prev_prof" style="width:100%;height:120px;object-fit:cover;border-radius:6px;display:none;border:1px solid #ddd;">
-              <div class="photo-name" id="name_prof" style="font-size:12px;color:#2E7D32;display:none;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LARGO -->
-      <div class="measure-section" style="margin-bottom:14px;">
-        <div class="card-title" style="font-size:14px; margin-bottom:14px; border-bottom:1px solid #FFE066;">&#8596; Largo</div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Valor <span class="required">*</span></label>
-            <div class="input-wrap">
-              <input type="number" id="largo" placeholder="0.00" min="0.01" step="0.01">
-              <span class="input-unit">cm</span>
-            </div>
-            <div class="error-msg" id="err-largo">Ingrese un valor mayor a 0</div>
-          </div>
-          <div class="form-group">
-            <label>Foto de evidencia</label>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div style="display:flex;gap:8px;">
-                <label for="cam_photo_largo" style="flex:1;cursor:pointer;background:#D40511;color:white;border-radius:6px;padding:9px 8px;text-align:center;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
-                  &#128247; Tomar foto
-                  <input type="file" id="cam_photo_largo" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'prev_largo','name_largo')">
-                </label>
-                <label for="photo_largo" style="flex:1;cursor:pointer;background:#FFCC00;color:#1A1A1A;border-radius:6px;padding:9px 8px;text-align:center;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
-                  &#128190; Galería
-                  <input type="file" id="photo_largo" accept="image/*" style="display:none" onchange="handlePhoto(this,'prev_largo','name_largo')">
-                </label>
-              </div>
-              <img class="photo-preview" id="prev_largo" style="width:100%;height:120px;object-fit:cover;border-radius:6px;display:none;border:1px solid #ddd;">
-              <div class="photo-name" id="name_largo" style="font-size:12px;color:#2E7D32;display:none;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ANCHO -->
-      <div class="measure-section" style="margin-bottom:14px;">
-        <div class="card-title" style="font-size:14px; margin-bottom:14px; border-bottom:1px solid #FFE066;">&#8594; Ancho</div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Valor <span class="required">*</span></label>
-            <div class="input-wrap">
-              <input type="number" id="ancho" placeholder="0.00" min="0.01" step="0.01">
-              <span class="input-unit">cm</span>
-            </div>
-            <div class="error-msg" id="err-ancho">Ingrese un valor mayor a 0</div>
-          </div>
-          <div class="form-group">
-            <label>Foto de evidencia</label>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div style="display:flex;gap:8px;">
-                <label for="cam_photo_ancho" style="flex:1;cursor:pointer;background:#D40511;color:white;border-radius:6px;padding:9px 8px;text-align:center;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
-                  &#128247; Tomar foto
-                  <input type="file" id="cam_photo_ancho" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'prev_ancho','name_ancho')">
-                </label>
-                <label for="photo_ancho" style="flex:1;cursor:pointer;background:#FFCC00;color:#1A1A1A;border-radius:6px;padding:9px 8px;text-align:center;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
-                  &#128190; Galería
-                  <input type="file" id="photo_ancho" accept="image/*" style="display:none" onchange="handlePhoto(this,'prev_ancho','name_ancho')">
-                </label>
-              </div>
-              <img class="photo-preview" id="prev_ancho" style="width:100%;height:120px;object-fit:cover;border-radius:6px;display:none;border:1px solid #ddd;">
-              <div class="photo-name" id="name_ancho" style="font-size:12px;color:#2E7D32;display:none;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PESO -->
-      <div class="measure-section">
-        <div class="card-title" style="font-size:14px; margin-bottom:14px; border-bottom:1px solid #FFE066;">&#9878; Peso por Unidad</div>
-        <div class="grid-2">
-          <div class="form-group">
-            <label>Valor <span class="required">*</span></label>
-            <div class="input-wrap">
-              <input type="number" id="peso" placeholder="0.000" min="0.001" step="0.001">
-              <span class="input-unit">kg</span>
-            </div>
-            <div class="error-msg" id="err-peso">Ingrese un valor mayor a 0</div>
-          </div>
-          <div class="form-group">
-            <label>Foto de evidencia</label>
-            <div style="display:flex;flex-direction:column;gap:8px;">
-              <div style="display:flex;gap:8px;">
-                <label for="cam_photo_peso" style="flex:1;cursor:pointer;background:#D40511;color:white;border-radius:6px;padding:9px 8px;text-align:center;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
-                  &#128247; Tomar foto
-                  <input type="file" id="cam_photo_peso" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this,'prev_peso','name_peso')">
-                </label>
-                <label for="photo_peso" style="flex:1;cursor:pointer;background:#FFCC00;color:#1A1A1A;border-radius:6px;padding:9px 8px;text-align:center;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;">
-                  &#128190; Galería
-                  <input type="file" id="photo_peso" accept="image/*" style="display:none" onchange="handlePhoto(this,'prev_peso','name_peso')">
-                </label>
-              </div>
-              <img class="photo-preview" id="prev_peso" style="width:100%;height:120px;object-fit:cover;border-radius:6px;display:none;border:1px solid #ddd;">
-              <div class="photo-name" id="name_peso" style="font-size:12px;color:#2E7D32;display:none;"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button class="btn btn-primary" id="btn-guardar" onclick="guardarRegistro()">&#10003; Guardar Registro</button>
-      <button class="btn btn-secondary" onclick="limpiarFormulario()">&#8635; Limpiar Formulario</button>
-      <button class="btn btn-secondary" onclick="exportarExcel()">&#128229; Exportar a Excel</button>
+  <div class="alert-box">
+    <div class="ico">⚠️</div>
+    <div class="txt">
+      <strong>¡ATENCIÓN! Solo se aceptan medidas en centímetros (cm) y peso en kilogramos (kg)</strong>
+      <span>Todos los campos con <b style="color:#FFCC00">*</b> son obligatorios. Los valores deben ser mayores a cero.</span>
     </div>
   </div>
 
-  <!-- HISTORICO TAB -->
-  <div id="tab-historico" class="tab-content">
+  <div class="card">
+    <div class="card-title">📦 Información del Material</div>
+    <div class="g2">
+      <div class="fg">
+        <label class="lbl">Código de Material <span class="req">*</span></label>
+        <input type="text" id="f_cod" placeholder="Ej: MAT-001234" maxlength="50">
+        <div class="emsg" id="e_cod">Campo obligatorio</div>
+      </div>
+      <div class="fg">
+        <label class="lbl">Código EAN <span class="req">*</span></label>
+        <input type="text" id="f_ean" placeholder="Ej: 7702011234567" maxlength="50" inputmode="text">
+        <div class="emsg" id="e_ean">Campo obligatorio</div>
+      </div>
+    </div>
+  </div>
 
-    <div class="stats-bar" id="stats-bar">
-      <div class="stat-card"><div class="num" id="stat-total">0</div><div class="lbl">Registros totales</div></div>
-      <div class="stat-card"><div class="num" id="stat-hoy">0</div><div class="lbl">Registros hoy</div></div>
-      <div class="stat-card"><div class="num" id="stat-materiales">0</div><div class="lbl">Materiales únicos</div></div>
+  <div class="card">
+    <div class="card-title">📐 Dimensiones de la Mercancía</div>
+
+    <div class="msec">
+      <div class="card-title">↕ Profundidad</div>
+      <div class="g2">
+        <div class="fg">
+          <label class="lbl">Valor <span class="req">*</span></label>
+          <div class="iw"><input type="number" id="f_prof" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal"><span class="unit">cm</span></div>
+          <div class="emsg" id="e_prof">Ingrese un valor mayor a 0</div>
+        </div>
+        <div class="fg">
+          <label class="lbl">Foto de evidencia</label>
+          <div class="photo-btns">
+            <button type="button" class="btn-cam" onclick="document.getElementById('cam_prof').click()">📷 Cámara</button><input type="file" id="cam_prof" accept="image/*" capture="environment" style="display:none" onchange="verFotoPrevia(this,'prev_prof')">
+            <label class="btn-gal"><span>🖼</span> Galería<input type="file" id="gal_prof" accept="image/*" onchange="verFotoPrevia(this,'prev_prof')"></label>
+          </div>
+          <div class="photo-emsg" id="perr_prof">Foto de Profundidad obligatoria</div><div class="prev-wrap" id="prev_prof"><img id="img_prof" src=""><p id="pnm_prof"></p></div>
+        </div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">&#128203; Histórico de Registros</div>
-      <div class="search-bar">
-        <input type="text" id="search-input" placeholder="Buscar por código de material o EAN..." oninput="filtrarTabla()">
-        <button class="btn btn-secondary btn-sm" onclick="exportarExcel()">&#128229; Exportar Excel</button>
-        <button class="btn btn-danger btn-sm" onclick="limpiarHistorico()">&#128465; Limpiar todo</button>
+    <div class="msec">
+      <div class="card-title">↔ Largo</div>
+      <div class="g2">
+        <div class="fg">
+          <label class="lbl">Valor <span class="req">*</span></label>
+          <div class="iw"><input type="number" id="f_largo" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal"><span class="unit">cm</span></div>
+          <div class="emsg" id="e_largo">Ingrese un valor mayor a 0</div>
+        </div>
+        <div class="fg">
+          <label class="lbl">Foto de evidencia</label>
+          <div class="photo-btns">
+            <button type="button" class="btn-cam" onclick="document.getElementById('cam_largo').click()">📷 Cámara</button><input type="file" id="cam_largo" accept="image/*" capture="environment" style="display:none" onchange="verFotoPrevia(this,'prev_largo')">
+            <label class="btn-gal"><span>🖼</span> Galería<input type="file" id="gal_largo" accept="image/*" onchange="verFotoPrevia(this,'prev_largo')"></label>
+          </div>
+          <div class="photo-emsg" id="perr_largo">Foto de Largo obligatoria</div><div class="prev-wrap" id="prev_largo"><img id="img_largo" src=""><p id="pnm_largo"></p></div>
+        </div>
       </div>
-      <div class="table-wrap">
-        <table id="tabla-historico">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Fecha</th>
-              <th>Cod. Material</th>
-              <th>EAN</th>
-              <th>Prof. (cm)</th>
-              <th>Largo (cm)</th>
-              <th>Ancho (cm)</th>
-              <th>Peso (kg)</th>
-              <th>Fotos</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="tabla-body">
-          </tbody>
-        </table>
-        <div class="empty-state" id="empty-state">
-          <div class="big-icon">&#128230;</div>
-          <p>No hay registros aún. &#10132; Añade el primer registro.</p>
+    </div>
+
+    <div class="msec">
+      <div class="card-title">→ Ancho</div>
+      <div class="g2">
+        <div class="fg">
+          <label class="lbl">Valor <span class="req">*</span></label>
+          <div class="iw"><input type="number" id="f_ancho" placeholder="0.00" min="0.01" step="0.01" inputmode="decimal"><span class="unit">cm</span></div>
+          <div class="emsg" id="e_ancho">Ingrese un valor mayor a 0</div>
+        </div>
+        <div class="fg">
+          <label class="lbl">Foto de evidencia</label>
+          <div class="photo-btns">
+            <button type="button" class="btn-cam" onclick="document.getElementById('cam_ancho').click()">📷 Cámara</button><input type="file" id="cam_ancho" accept="image/*" capture="environment" style="display:none" onchange="verFotoPrevia(this,'prev_ancho')">
+            <label class="btn-gal"><span>🖼</span> Galería<input type="file" id="gal_ancho" accept="image/*" onchange="verFotoPrevia(this,'prev_ancho')"></label>
+          </div>
+          <div class="photo-emsg" id="perr_ancho">Foto de Ancho obligatoria</div><div class="prev-wrap" id="prev_ancho"><img id="img_ancho" src=""><p id="pnm_ancho"></p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="msec" style="margin-bottom:0">
+      <div class="card-title">⚖ Peso por Unidad</div>
+      <div class="g2">
+        <div class="fg">
+          <label class="lbl">Valor <span class="req">*</span></label>
+          <div class="iw"><input type="number" id="f_peso" placeholder="0.000" min="0.001" step="0.001" inputmode="decimal"><span class="unit">kg</span></div>
+          <div class="emsg" id="e_peso">Ingrese un valor mayor a 0</div>
+        </div>
+        <div class="fg">
+          <label class="lbl">Foto de evidencia</label>
+          <div class="photo-btns">
+            <button type="button" class="btn-cam" onclick="document.getElementById('cam_peso').click()">📷 Cámara</button><input type="file" id="cam_peso" accept="image/*" capture="environment" style="display:none" onchange="verFotoPrevia(this,'prev_peso')">
+            <label class="btn-gal"><span>🖼</span> Galería<input type="file" id="gal_peso" accept="image/*" onchange="verFotoPrevia(this,'prev_peso')"></label>
+          </div>
+          <div class="photo-emsg" id="perr_peso">Foto de Peso obligatoria</div><div class="prev-wrap" id="prev_peso"><img id="img_peso" src=""><p id="pnm_peso"></p></div>
         </div>
       </div>
     </div>
   </div>
 
+  <div class="actions">
+    <button class="btn btn-red" id="btn-guardar" onclick="guardar()">✓ Guardar Registro</button>
+    <button class="btn btn-yel" onclick="limpiar()">↺ Limpiar</button>
+    <button class="btn btn-yel" onclick="exportar()">⬇ Exportar Excel</button>
+  </div>
 </div>
+
+<!-- HISTORICO -->
+<div id="tab-hist" class="tab">
+  <div class="stats">
+    <div class="stat"><div class="n" id="s_total">0</div><div class="l">Total registros</div></div>
+    <div class="stat"><div class="n" id="s_hoy">0</div><div class="l">Hoy</div></div>
+    <div class="stat"><div class="n" id="s_mat">0</div><div class="l">Materiales únicos</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 Histórico de Registros</div>
+    <div class="srch">
+      <input type="text" id="srch" placeholder="Buscar por material o EAN..." oninput="filtrar()">
+      <button class="btn btn-yel" style="padding:9px 14px;font-size:13px" onclick="exportar()">⬇ Excel</button>
+      <button class="btn btn-del" style="padding:9px 14px;font-size:13px" onclick="borrarTodo()">🗑 Limpiar todo</button>
+    </div>
+    <div class="tbl-wrap">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th>#</th><th>Fecha</th><th>Cod. Material</th><th>EAN</th>
+            <th>Prof.(cm)</th><th>Largo(cm)</th><th>Ancho(cm)</th><th>Peso(kg)</th>
+            <th>Fotos</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+      <div class="empty" id="empty"><div class="ei">📦</div><p>Sin registros aún</p></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /main -->
 
 <div class="toast" id="toast"></div>
 
-<!-- Modal foto ampliada -->
-<div id="modal-foto" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;" onclick="this.style.display='none'">
-  <img id="modal-img" style="max-width:90vw; max-height:90vh; border-radius:8px; box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+<div class="modal-bg" id="modal" onclick="this.classList.remove('open')">
+  <img id="modal-img" src="">
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const SHEETS_URL = 'https://script.google.com/a/macros/dhl.com/s/AKfycbx4yoIG63mqFKSpNGIRDewi06MMxQE1MuvIYPxAihJt5vsXW5Rkxihr6jxkuNBDaD57/exec';
-let registros = JSON.parse(localStorage.getItem('dhl_huellas') || '[]');
+var SHEETS_URL = 'https://script.google.com/a/macros/dhl.com/s/AKfycbx4yoIG63mqFKSpNGIRDewi06MMxQE1MuvIYPxAihJt5vsXW5Rkxihr6jxkuNBDaD57/exec';
+var DB_KEY = 'dhl_v3';
+var registros = [];
 
-function showTab(tab) {
-  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  event.currentTarget.classList.add('active');
-  if (tab === 'historico') renderTabla();
+try { registros = JSON.parse(localStorage.getItem(DB_KEY) || '[]'); } catch(e) { registros = []; }
+
+function guardar_db() {
+  try { localStorage.setItem(DB_KEY, JSON.stringify(registros)); } catch(e) {}
 }
 
-function triggerFile(id) {
-  // do nothing, the input handles it
+function showTab(id, btn) {
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('nav button').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'hist') renderTabla();
 }
 
-function handlePhoto(input, prevId, nameId) {
-  const file = input.files[0];
+function toast(msg, isErr) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isErr ? ' red' : '');
+  setTimeout(function(){ t.className = 'toast'; }, 3500);
+}
+
+function verFotoPrevia(input, wrapId) {
+  var file = input.files && input.files[0];
   if (!file) return;
-  const reader = new FileReader();
+  var reader = new FileReader();
   reader.onload = function(e) {
-    const prev = document.getElementById(prevId);
-    prev.src = e.target.result;
-    prev.style.display = 'block';
-    const nm = document.getElementById(nameId);
-    nm.textContent = '✓ ' + file.name;
-    nm.style.display = 'block';
+    var wrap = document.getElementById(wrapId);
+    var imgId = 'img_' + wrapId.replace('prev_','');
+    var nmId  = 'pnm_' + wrapId.replace('prev_','');
+    document.getElementById(imgId).src = e.target.result;
+    document.getElementById(nmId).textContent = '✓ ' + file.name;
+    wrap.style.display = 'block';
   };
   reader.readAsDataURL(file);
 }
 
-function showToast(msg, isError) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error-toast' : '');
-  setTimeout(() => t.className = 'toast', 3200);
-}
-
-function setError(fieldId, errId, show) {
-  document.getElementById(fieldId).classList.toggle('error', show);
-  document.getElementById(errId).classList.toggle('show', show);
-}
-
-function validarForm() {
-  let ok = true;
-  const cod = document.getElementById('cod_material').value.trim();
-  const ean = document.getElementById('cod_ean').value.trim();
-  const prof = parseFloat(document.getElementById('profundidad').value);
-  const largo = parseFloat(document.getElementById('largo').value);
-  const ancho = parseFloat(document.getElementById('ancho').value);
-  const peso = parseFloat(document.getElementById('peso').value);
-
-  if (!cod) { setError('cod_material','err-cod',true); ok=false; } else setError('cod_material','err-cod',false);
-  if (!ean) { setError('cod_ean','err-ean',true); ok=false; } else setError('cod_ean','err-ean',false);
-  if (!prof || prof <= 0) { setError('profundidad','err-prof',true); ok=false; } else setError('profundidad','err-prof',false);
-  if (!largo || largo <= 0) { setError('largo','err-largo',true); ok=false; } else setError('largo','err-largo',false);
-  if (!ancho || ancho <= 0) { setError('ancho','err-ancho',true); ok=false; } else setError('ancho','err-ancho',false);
-  if (!peso || peso <= 0) { setError('peso','err-peso',true); ok=false; } else setError('peso','err-peso',false);
-  return ok;
-}
-
-function getPhotoData(inputId) {
-  // Check gallery input
-  const input = document.getElementById(inputId);
-  if (input && input.files && input.files[0]) {
-    return document.getElementById(inputId.replace('photo_','prev_')).src || null;
-  }
-  // Check camera input
-  const camInput = document.getElementById('cam_' + inputId);
-  if (camInput && camInput.files && camInput.files[0]) {
-    return document.getElementById(inputId.replace('photo_','prev_')).src || null;
-  }
+function getFoto(sufijo) {
+  var cam = document.getElementById('cam_' + sufijo);
+  var gal = document.getElementById('gal_' + sufijo);
+  var img = document.getElementById('img_' + sufijo);
+  if (img && img.src && img.src.length > 100) return img.src;
   return null;
 }
 
-function guardarRegistro() {
-  if (!validarForm()) {
-    showToast('Por favor completa todos los campos obligatorios.', true);
-    return;
-  }
+function setErr(fId, eId, show) {
+  var f = document.getElementById(fId);
+  var e = document.getElementById(eId);
+  if (f) f.classList.toggle('err', show);
+  if (e) e.classList.toggle('show', show);
+}
 
-  var now = new Date();
-  var d = now.getDate().toString().padStart(2,'0');
-  var m = (now.getMonth()+1).toString().padStart(2,'0');
-  var y = now.getFullYear();
-  var fecha = d + '/' + m + '/' + y;
+function setPhotoErr(sfx, show) {
+  var btns = document.getElementById('prev_' + sfx);
+  var err  = document.getElementById('perr_' + sfx);
+  if (btns) btns.parentElement.classList.toggle('photo-err', show);
+  if (err)  err.classList.toggle('show', show);
+}
 
-  var reg = {
-    id: String(Date.now()),
-    fecha: fecha,
-    cod_material: document.getElementById('cod_material').value.trim(),
-    cod_ean: document.getElementById('cod_ean').value.trim(),
-    profundidad: parseFloat(document.getElementById('profundidad').value).toFixed(2),
-    largo: parseFloat(document.getElementById('largo').value).toFixed(2),
-    ancho: parseFloat(document.getElementById('ancho').value).toFixed(2),
-    peso: parseFloat(document.getElementById('peso').value).toFixed(3),
-    foto_prof: getPhotoData('photo_prof'),
-    foto_largo: getPhotoData('photo_largo'),
-    foto_ancho: getPhotoData('photo_ancho'),
-    foto_peso: getPhotoData('photo_peso'),
-  };
+function validar() {
+  var ok = true;
+  var cod   = (document.getElementById('f_cod').value || '').trim();
+  var ean   = (document.getElementById('f_ean').value || '').trim();
+  var prof  = parseFloat(document.getElementById('f_prof').value);
+  var largo = parseFloat(document.getElementById('f_largo').value);
+  var ancho = parseFloat(document.getElementById('f_ancho').value);
+  var peso  = parseFloat(document.getElementById('f_peso').value);
+  if (!cod)                { setErr('f_cod','e_cod',true);    ok=false; } else setErr('f_cod','e_cod',false);
+  if (!ean)                { setErr('f_ean','e_ean',true);    ok=false; } else setErr('f_ean','e_ean',false);
+  if (!prof  || prof  <= 0){ setErr('f_prof','e_prof',true);  ok=false; } else setErr('f_prof','e_prof',false);
+  if (!largo || largo <= 0){ setErr('f_largo','e_largo',true);ok=false; } else setErr('f_largo','e_largo',false);
+  if (!ancho || ancho <= 0){ setErr('f_ancho','e_ancho',true);ok=false; } else setErr('f_ancho','e_ancho',false);
+  if (!peso  || peso  <= 0){ setErr('f_peso','e_peso',true);  ok=false; } else setErr('f_peso','e_peso',false);
+  ['prof','largo','ancho','peso'].forEach(function(sfx) {
+    if (!getFoto(sfx)) { setPhotoErr(sfx, true);  ok=false; }
+    else               { setPhotoErr(sfx, false); }
+  });
+  return ok;
+}
 
+function fechaHoy() {
+  var n = new Date();
+  var d = String(n.getDate()).padStart(2,'0');
+  var m = String(n.getMonth()+1).padStart(2,'0');
+  var y = n.getFullYear();
+  return d + '/' + m + '/' + y;
+}
+
+function guardar() {
+  if (!validar()) { toast('Completa todos los campos obligatorios', true); return; }
   var btn = document.getElementById('btn-guardar');
   btn.disabled = true;
   btn.textContent = '⏳ Guardando...';
 
-  var params = new URLSearchParams();
-  params.append('fecha', reg.fecha);
-  params.append('cod_material', reg.cod_material);
-  params.append('cod_ean', reg.cod_ean);
-  params.append('profundidad', reg.profundidad);
-  params.append('largo', reg.largo);
-  params.append('ancho', reg.ancho);
-  params.append('peso', reg.peso);
-  params.append('foto_prof', reg.foto_prof ? 'Adjunta' : 'No');
-  params.append('foto_largo', reg.foto_largo ? 'Adjunta' : 'No');
-  params.append('foto_ancho', reg.foto_ancho ? 'Adjunta' : 'No');
-  params.append('foto_peso', reg.foto_peso ? 'Adjunta' : 'No');
-  params.append('id', reg.id);
+  var reg = {
+    id: String(Date.now()),
+    fecha: fechaHoy(),
+    cod: (document.getElementById('f_cod').value || '').trim(),
+    ean: (document.getElementById('f_ean').value || '').trim(),
+    prof:  parseFloat(document.getElementById('f_prof').value).toFixed(2),
+    largo: parseFloat(document.getElementById('f_largo').value).toFixed(2),
+    ancho: parseFloat(document.getElementById('f_ancho').value).toFixed(2),
+    peso:  parseFloat(document.getElementById('f_peso').value).toFixed(3),
+    fp: getFoto('prof')  ? 'Adjunta' : 'No',
+    fl: getFoto('largo') ? 'Adjunta' : 'No',
+    fa: getFoto('ancho') ? 'Adjunta' : 'No',
+    fw: getFoto('peso')  ? 'Adjunta' : 'No',
+    foto_prof:  getFoto('prof'),
+    foto_largo: getFoto('largo'),
+    foto_ancho: getFoto('ancho'),
+    foto_peso:  getFoto('peso'),
+  };
 
-  fetch(SHEETS_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: params
-  }).then(function() {
-    try {
-      registros.push(reg);
-      localStorage.setItem('dhl_huellas', JSON.stringify(registros));
-    } catch(e) {}
-    showToast('✓ Registro guardado en Google Sheets');
-    limpiarFormulario();
+  var body = 'fecha='       + encodeURIComponent(reg.fecha)
+           + '&cod_material='+ encodeURIComponent(reg.cod)
+           + '&cod_ean='    + encodeURIComponent(reg.ean)
+           + '&profundidad='+ encodeURIComponent(reg.prof)
+           + '&largo='      + encodeURIComponent(reg.largo)
+           + '&ancho='      + encodeURIComponent(reg.ancho)
+           + '&peso='       + encodeURIComponent(reg.peso)
+           + '&foto_prof='  + encodeURIComponent(reg.fp)
+           + '&foto_largo=' + encodeURIComponent(reg.fl)
+           + '&foto_ancho=' + encodeURIComponent(reg.fa)
+           + '&foto_peso='  + encodeURIComponent(reg.fw)
+           + '&id='         + encodeURIComponent(reg.id);
+
+  var getUrl = SHEETS_URL + '?' + body;
+
+  fetch(getUrl, { method: 'GET', mode: 'no-cors' })
+  .then(function() {
+    registros.push(reg);
+    guardar_db();
+    toast('✓ Guardado en Google Sheets');
+    limpiar();
   }).catch(function() {
-    try {
-      registros.push(reg);
-      localStorage.setItem('dhl_huellas', JSON.stringify(registros));
-    } catch(e) {}
-    showToast('⚠️ Sin conexión — guardado localmente', true);
-    limpiarFormulario();
+    registros.push(reg);
+    guardar_db();
+    toast('⚠️ Sin internet — guardado localmente', true);
+    limpiar();
   }).finally(function() {
     btn.disabled = false;
     btn.textContent = '✓ Guardar Registro';
   });
 }
 
-function limpiarFormulario() {
-  ['cod_material','cod_ean','profundidad','largo','ancho','peso'].forEach(id => {
-    document.getElementById(id).value = '';
-    document.getElementById(id).classList.remove('error');
+function limpiar() {
+  ['f_cod','f_ean','f_prof','f_largo','f_ancho','f_peso'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) { el.value = ''; el.classList.remove('err'); }
   });
-  ['err-cod','err-ean','err-prof','err-largo','err-ancho','err-peso'].forEach(id => {
-    document.getElementById(id).classList.remove('show');
+  ['e_cod','e_ean','e_prof','e_largo','e_ancho','e_peso'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('show');
   });
-  ['photo_prof','photo_largo','photo_ancho','photo_peso'].forEach(id => {
-    document.getElementById(id).value = '';
-    const cam = document.getElementById('cam_' + id);
-    if (cam) cam.value = '';
-    const suffix = id.replace('photo_','');
-    document.getElementById('prev_' + suffix).style.display = 'none';
-    document.getElementById('name_' + suffix).style.display = 'none';
+  ['prof','largo','ancho','peso'].forEach(function(s) {
+    ['cam_','gal_'].forEach(function(p) {
+      var el = document.getElementById(p + s);
+      if (el) el.value = '';
+    });
+    var wrap = document.getElementById('prev_' + s);
+    if (wrap) wrap.style.display = 'none';
+    var img = document.getElementById('img_' + s);
+    if (img) img.src = '';
+    var nm = document.getElementById('pnm_' + s);
+    if (nm) nm.textContent = '';
+    setPhotoErr(s, false);
   });
 }
 
-function renderTabla(filter) {
-  const tbody = document.getElementById('tabla-body');
-  const empty = document.getElementById('empty-state');
-  let data = filter ? registros.filter(r =>
-    r.cod_material.toLowerCase().includes(filter.toLowerCase()) ||
-    r.cod_ean.toLowerCase().includes(filter.toLowerCase())
-  ) : registros;
+function renderTabla(filtro) {
+  var body = document.getElementById('tbl-body');
+  var empty = document.getElementById('empty');
+  var today = fechaHoy();
 
-  // Stats
-  const today = new Date().toLocaleDateString('es-CO', {year:'numeric',month:'2-digit',day:'2-digit'});
-  document.getElementById('stat-total').textContent = registros.length;
-  document.getElementById('stat-hoy').textContent = registros.filter(r => r.fecha.startsWith(today)).length;
-  document.getElementById('stat-materiales').textContent = new Set(registros.map(r => r.cod_material)).size;
+  document.getElementById('s_total').textContent = registros.length;
+  document.getElementById('s_hoy').textContent = registros.filter(function(r){ return r.fecha === today; }).length;
+  var unicos = {};
+  registros.forEach(function(r){ unicos[r.cod] = 1; });
+  document.getElementById('s_mat').textContent = Object.keys(unicos).length;
+
+  var data = filtro
+    ? registros.filter(function(r){
+        var q = filtro.toLowerCase();
+        return (r.cod||'').toLowerCase().includes(q) || (r.ean||'').toLowerCase().includes(q);
+      })
+    : registros;
 
   if (data.length === 0) {
-    tbody.innerHTML = '';
+    body.innerHTML = '';
     empty.style.display = 'block';
     return;
   }
   empty.style.display = 'none';
 
-  tbody.innerHTML = data.map((r, i) => {
-    const fotos = [r.foto_prof, r.foto_largo, r.foto_ancho, r.foto_peso].filter(Boolean);
-    const fotosHTML = fotos.length > 0
-      ? fotos.map((f,fi) => `<img class="thumb-img" src="${f}" title="Foto ${fi+1}" onclick="verFoto('${f}')" />`).join(' ')
-      : '<span style="color:#aaa;font-size:12px;">Sin fotos</span>';
-    return `<tr>
-      <td>${i+1}</td>
-      <td style="white-space:nowrap;font-size:12px;">${r.fecha}</td>
-      <td><strong>${r.cod_material}</strong></td>
-      <td style="font-family:monospace;">${r.cod_ean}</td>
-      <td>${r.profundidad}</td>
-      <td>${r.largo}</td>
-      <td>${r.ancho}</td>
-      <td>${r.peso}</td>
-      <td>${fotosHTML}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="eliminarRegistro(${r.id})">&#128465;</button></td>
-    </tr>`;
+  body.innerHTML = data.map(function(r, i) {
+    var fotos = [r.foto_prof, r.foto_largo, r.foto_ancho, r.foto_peso].filter(Boolean);
+    var fotosHtml = fotos.length
+      ? fotos.map(function(f, fi) {
+          return '<img class="thumb" src="' + f + '" title="Foto '+(fi+1)+'" onclick="abrirFoto(\'' + f + '\')">';
+        }).join(' ')
+      : '<span style="color:#aaa;font-size:11px">Sin fotos</span>';
+    return '<tr>'
+      + '<td>' + (i+1) + '</td>'
+      + '<td style="white-space:nowrap">' + (r.fecha||'') + '</td>'
+      + '<td><b>' + (r.cod||'') + '</b></td>'
+      + '<td style="font-family:monospace">' + (r.ean||'') + '</td>'
+      + '<td>' + (r.prof||'') + '</td>'
+      + '<td>' + (r.largo||'') + '</td>'
+      + '<td>' + (r.ancho||'') + '</td>'
+      + '<td>' + (r.peso||'') + '</td>'
+      + '<td>' + fotosHtml + '</td>'
+      + '<td><button class="btn btn-del" style="padding:5px 10px;font-size:12px" onclick="borrar(\''+r.id+'\')">🗑</button></td>'
+      + '</tr>';
   }).join('');
 }
 
-function filtrarTabla() {
-  renderTabla(document.getElementById('search-input').value);
+function filtrar() {
+  renderTabla(document.getElementById('srch').value);
 }
 
-function verFoto(src) {
+function abrirFoto(src) {
   document.getElementById('modal-img').src = src;
-  document.getElementById('modal-foto').style.display = 'flex';
+  document.getElementById('modal').classList.add('open');
 }
 
-function eliminarRegistro(id) {
+function borrar(id) {
   if (!confirm('¿Eliminar este registro?')) return;
-  registros = registros.filter(r => r.id !== id);
-  localStorage.setItem('dhl_huellas', JSON.stringify(registros));
-  renderTabla(document.getElementById('search-input').value);
-  showToast('Registro eliminado');
+  registros = registros.filter(function(r){ return r.id !== id; });
+  guardar_db();
+  renderTabla(document.getElementById('srch').value);
+  toast('Registro eliminado');
 }
 
-function limpiarHistorico() {
-  if (!confirm('¿Eliminar TODOS los registros? Esta acción no se puede deshacer.')) return;
+function borrarTodo() {
+  if (!confirm('¿Eliminar TODOS los registros? No se puede deshacer.')) return;
   registros = [];
-  localStorage.setItem('dhl_huellas', JSON.stringify(registros));
+  guardar_db();
   renderTabla();
-  showToast('Histórico limpiado');
+  toast('Histórico limpiado');
 }
 
-function exportarExcel() {
-  if (registros.length === 0) { showToast('No hay registros para exportar.', true); return; }
-  const data = registros.map((r, i) => ({
-    '#': i + 1,
-    'Fecha': r.fecha,
-    'Código Material': r.cod_material,
-    'EAN': r.cod_ean,
-    'Profundidad (cm)': parseFloat(r.profundidad),
-    'Largo (cm)': parseFloat(r.largo),
-    'Ancho (cm)': parseFloat(r.ancho),
-    'Peso (kg)': parseFloat(r.peso),
-    'Foto Profundidad': r.foto_prof ? 'Adjunta' : 'No',
-    'Foto Largo': r.foto_largo ? 'Adjunta' : 'No',
-    'Foto Ancho': r.foto_ancho ? 'Adjunta' : 'No',
-    'Foto Peso': r.foto_peso ? 'Adjunta' : 'No',
-  }));
-
-  const ws = XLSX.utils.json_to_sheet(data);
-  ws['!cols'] = [
-    {wch:4},{wch:18},{wch:18},{wch:18},
-    {wch:14},{wch:14},{wch:14},{wch:12},
-    {wch:16},{wch:16},{wch:16},{wch:16}
-  ];
-  const wb = XLSX.utils.book_new();
+function exportar() {
+  if (!registros.length) { toast('No hay registros para exportar', true); return; }
+  var data = registros.map(function(r, i) {
+    return {
+      '#': i+1,
+      'Fecha': r.fecha,
+      'Cod. Material': r.cod,
+      'EAN': r.ean,
+      'Profundidad (cm)': parseFloat(r.prof),
+      'Largo (cm)': parseFloat(r.largo),
+      'Ancho (cm)': parseFloat(r.ancho),
+      'Peso (kg)': parseFloat(r.peso),
+      'Foto Profundidad': r.fp || (r.foto_prof ? 'Adjunta' : 'No'),
+      'Foto Largo':       r.fl || (r.foto_largo ? 'Adjunta' : 'No'),
+      'Foto Ancho':       r.fa || (r.foto_ancho ? 'Adjunta' : 'No'),
+      'Foto Peso':        r.fw || (r.foto_peso  ? 'Adjunta' : 'No'),
+    };
+  });
+  var ws = XLSX.utils.json_to_sheet(data);
+  ws['!cols'] = [{wch:4},{wch:12},{wch:16},{wch:18},{wch:14},{wch:12},{wch:12},{wch:10},{wch:16},{wch:14},{wch:12},{wch:12}];
+  var wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Huellas DHL');
-  const fecha = new Date().toISOString().slice(0,10);
-  XLSX.writeFile(wb, `DHL_Huellas_${fecha}.xlsx`);
-  showToast('✓ Excel exportado correctamente');
+  var fecha = fechaHoy().replace(/\//g,'-');
+  XLSX.writeFile(wb, 'DHL_Huellas_' + fecha + '.xlsx');
+  toast('✓ Excel exportado');
 }
 </script>
 </body>
