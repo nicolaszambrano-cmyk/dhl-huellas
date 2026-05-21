@@ -379,23 +379,51 @@ function guardar() {
            + '&foto_peso='  + encodeURIComponent(reg.fw)
            + '&id='         + encodeURIComponent(reg.id);
 
-  var getUrl = SHEETS_URL + '?' + body;
-
-  fetch(getUrl, { method: 'GET', mode: 'no-cors' })
-  .then(function() {
+  var cbName = 'cb_' + Date.now();
+  var timeout = setTimeout(function() {
+    cleanup();
     registros.push(reg);
     guardar_db();
-    toast('✓ Guardado en Google Sheets');
+    toast('\u26a0\ufe0f No se pudo confirmar — guardado localmente', true);
     limpiar();
-  }).catch(function() {
-    registros.push(reg);
-    guardar_db();
-    toast('⚠️ Sin internet — guardado localmente', true);
-    limpiar();
-  }).finally(function() {
     btn.disabled = false;
-    btn.textContent = '✓ Guardar Registro';
-  });
+    btn.textContent = '\u2713 Guardar Registro';
+  }, 8000);
+
+  function cleanup() {
+    clearTimeout(timeout);
+    if (window[cbName]) delete window[cbName];
+    var old = document.getElementById(cbName);
+    if (old && old.parentNode) old.parentNode.removeChild(old);
+  }
+
+  window[cbName] = function(resp) {
+    cleanup();
+    registros.push(reg);
+    guardar_db();
+    if (resp && resp.status === 'ok') {
+      toast('\u2713 Guardado en Google Sheets');
+    } else {
+      toast('\u2713 Registro guardado');
+    }
+    limpiar();
+    btn.disabled = false;
+    btn.textContent = '\u2713 Guardar Registro';
+  };
+
+  var script = document.createElement('script');
+  script.id = cbName;
+  script.src = SHEETS_URL + '?' + body + '&callback=' + cbName;
+  script.onerror = function() {
+    cleanup();
+    registros.push(reg);
+    guardar_db();
+    toast('\u26a0\ufe0f Error de red — guardado localmente', true);
+    limpiar();
+    btn.disabled = false;
+    btn.textContent = '\u2713 Guardar Registro';
+  };
+  document.head.appendChild(script);
 }
 
 function limpiar() {
